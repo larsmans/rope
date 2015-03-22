@@ -1,6 +1,9 @@
 package rope
 
-import "testing"
+import (
+	"math/rand"
+	"testing"
+)
 
 func TestRope(t *testing.T) {
 	r := New("foo!")
@@ -23,6 +26,11 @@ func TestRope(t *testing.T) {
 		if got := r.Slice(c.i, c.j).String(); got != c.s {
 			t.Errorf("expected %q, got %q", c.s, got)
 		}
+	}
+
+	r = Concat(r.Slice(1, 7), r.Slice(4, 16))
+	if r.Len() != 18 {
+		t.Errorf("expected length 18, got %d", r.Len())
 	}
 }
 
@@ -57,30 +65,45 @@ func TestConcatOptim(t *testing.T) {
 }
 
 var strs = []string{
-	"foo", "bar", "baz", "quux", "supercalifragilisticexpialidocious"}
+	"foo", "bar", "baz", "quux", "supercalifragilisticexpialidocious",
+	string(make([]byte, small+161)), "", "1"}
 
-func benchmarkConcat() Rope {
+func benchmarkConcat(rng *rand.Rand) Rope {
 	r := New("bla")
 	for j := 0; j < 20; j++ {
-		r = Concat(r, New(strs[j%len(strs)]))
+		r = Concat(r, New(strs[rng.Intn(len(strs))]))
+		r = Concat(New(strs[rng.Intn(len(strs))]), r)
 	}
 	for j := 0; j < 20; j++ {
-		r = Concat(r, New(""), New("x"), r)
+		r = Concat(r, New(""), r, New("x"), New("y"))
 	}
 	return r
 }
 
 func BenchmarkConcat(b *testing.B) {
+	rng := rand.New(rand.NewSource(42))
 	for i := 0; i < b.N; i++ {
-		benchmarkConcat()
+		benchmarkConcat(rng)
 	}
 }
 
 func BenchmarkSlice(b *testing.B) {
-	r := benchmarkConcat()
+	rng := rand.New(rand.NewSource(42))
+	r := benchmarkConcat(rng)
+	check := func(from, to int) {
+		if n := r.Slice(from, to).Len(); n != to-from {
+			b.Fatal("expected %d, got %d", to-from, n)
+		}
+	}
+
 	for i := 0; i < b.N; i++ {
-		r.Slice(521, 1261)
-		r.Slice(0, r.Len())
-		r.Slice(26137, 131373)
+		check(0, 1)
+		check(r.Len()-9, r.Len())
+		check(521, 1261)
+		check(0, r.Len())
+		check(26137, 131373)
+		check(1, r.Len()-1)
+		check(19248, 30000)
+		check(0, r.Len()-1)
 	}
 }

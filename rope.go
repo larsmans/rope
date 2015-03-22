@@ -135,9 +135,10 @@ func (n *node) length() int {
 
 func (n *node) slice(i, j int) tree {
 	leftlen := n.left.length()
-	if j <= leftlen {
+	switch {
+	case j <= leftlen:
 		return n.left.slice(i, j)
-	} else if i >= leftlen {
+	case i >= leftlen:
 		return n.right.slice(i-leftlen, j-leftlen)
 	}
 
