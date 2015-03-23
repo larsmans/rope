@@ -22,16 +22,25 @@ func New(s string) Rope {
 }
 
 // Concatenate zero or more ropes.
-func Concat(rs ...Rope) Rope {
-	switch n := len(rs); n {
+func Concat(ropes ...Rope) Rope {
+	switch len(ropes) {
 	case 0:
 		return Rope{leaf("")}
+	default:
+		return Rope{concat(ropes)}
+	}
+}
+
+func concat(ropes []Rope) tree {
+	switch n := len(ropes); n {
 	case 1:
-		return rs[0]
+		return ropes[0].root
+	case 2:
+		return ropes[0].root.concat(ropes[1].root)
 	default:
 		n2 := n / 2
-		r1, r2 := Concat(rs[:n2]...), Concat(rs[n2:]...)
-		return Rope{r1.root.concat(r2.root)}
+		r1, r2 := concat(ropes[:n2]), concat(ropes[n2:])
+		return r1.concat(r2)
 	}
 }
 
