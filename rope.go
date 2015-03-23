@@ -44,9 +44,30 @@ func concat(ropes []Rope) tree {
 	}
 }
 
+func checkSlice(i, j int) {
+	if i > j {
+		panic(fmt.Sprintf("%d > %d", i, j))
+	}
+}
+
+// Delete the substring at positions i through j.
+func (r Rope) Delete(i, j int) Rope {
+	checkSlice(i, j)
+	if i < j {
+		left, right := r.Slice(0, i), r.Slice(j, r.Len())
+		r = Rope{left.root.concat(right.root)}
+	}
+	return r
+}
+
 // Returns the i'th byte in the rope.
 func (r Rope) Index(i int) byte {
 	return r.root.index(i)
+}
+
+// Insert ins at position i.
+func (r Rope) Insert(i int, ins Rope) Rope {
+	return r.Replace(i, i, ins)
 }
 
 // The length of the rope, in bytes.
@@ -54,8 +75,18 @@ func (r Rope) Len() int {
 	return r.root.length()
 }
 
+// Replace positions i through j with repl.
+func (r Rope) Replace(i, j int, repl Rope) Rope {
+	if repl.Len() == 0 {
+		return r.Delete(i, j)
+	}
+	checkSlice(i, j)
+	return Concat(r.Slice(0, i), repl, r.Slice(j, r.Len()))
+}
+
 // Slice of a rope. Equivalent to New(r.String())[i:j].
 func (r Rope) Slice(i, j int) Rope {
+	checkSlice(i, j)
 	if i == j {
 		return Rope{leaf("")}
 	}

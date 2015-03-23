@@ -64,6 +64,22 @@ func TestConcatOptim(t *testing.T) {
 	}
 }
 
+func TestModify(t *testing.T) {
+	r := New("foobaz")
+	check := func(expected string) {
+		if got := r.String(); got != expected {
+			t.Fatalf("expected %q, got %q", expected, got)
+		}
+	}
+
+	r = r.Insert(3, New("bar"))
+	check("foobarbaz")
+	r = r.Delete(0, 3)
+	check("barbaz")
+	r = r.Replace(5, 6, New("rian"))
+	check("barbarian")
+}
+
 var strs = []string{
 	"foo", "bar", "baz", "quux", "supercalifragilisticexpialidocious",
 	string(make([]byte, small+161)), "", "1"}
